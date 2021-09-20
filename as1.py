@@ -33,6 +33,13 @@ def get_input_data(filename): #return cellular_functions, genes_set
 # return: The support count of the itemset
 def support(transactions, itemset):
     support_count = 0
+
+    
+    # itemset means like {1,2,3,4} 
+        
+    for v in transactions:
+        if itemset in transactions[v]:
+            support_count += 1
     """
 	FILL UP HERE!
     Calculate support of an itemset by iterating over the frequent itemsets
@@ -45,16 +52,25 @@ def support(transactions, itemset):
 # param itemset_size: The size of joined itemsets
 # return: All valid joined itemsets
 def generate_selectively_joined_itemsets(frequent_itemsets, itemset_size):
-
+    # initial size - 2
+    # print("joined - itemset size : ", itemset_size)  
     # Record seen_itemsets to prevent duplicates
-    seen_itemsets = set()
+    seen_itemsets = set() #?? * 봤던거 넣는거인듯 for duplicates #??????????????????????????????????????
     joined_itemsets = set()
+    #! Now Working
+    #print(frequent_itemsets[1][0])
+    c = combinations(frequent_itemsets[itemset_size-1][0], itemset_size) # [1][0]
+    #print(list(c))            
+    for v in list(c):
+        joined_itemsets.add(v)
+    #print(joined_itemsets)
+    
     """
 	FILL UP HERE!
     Try all combinations of two itemsets from the table of frequent itemsets and join the pair if they share (itemset_size - 2) items
     Add each joined itemset to the list if it is not present in the list and discard it otherwise
     """
-    return joined_itemsets
+    return joined_itemsets # {('YEL027w', 'YNL271c'), ('YEL027w', 'YGL019w'), ('YGL019w', 'YNL271c')}
 
 
 # This function checks all the subsets of selected itemsets whether they all are frequent or not and prunes the itemset if anyone of the subsets is not frequent
@@ -63,7 +79,70 @@ def generate_selectively_joined_itemsets(frequent_itemsets, itemset_size):
 # param itemset_size: The size of intended frequent itemsets
 # return: The itemsets whose all subsets are frequent
 def apply_apriori_pruning(selected_itemsets, frequent_itemsets, itemset_size):
+    #! Now Working
     apriori_pruned_itemsets = set()
+    #???
+    #이전꺼를 확인해서,
+    #selected(joined)에서 불가능한 조합이 있으면 pruning 해야함
+    #pruning된 최종적인 itemsets를 반환
+    
+    # subset_count = len(list(selected_itemsets)[0]) # the number of element is the number of subset of size:(n-1) 
+
+    # for super in selected_itemsets:
+    #     count = 0
+    #     super = set(super)
+    #     for sub in join2:
+    #         sub = set(sub)
+    #         if sub.issubset(super):
+    #             count +=1
+                
+    #         else:
+    #             pass
+    #     if(count < subset_count):
+    #         print("Pruning : ", super)
+    subset_count = len(list(selected_itemsets)[0]) # the number of element is the number of subset of size:(n-1)  or itemset_size+1?
+    prun_list = list() #!
+    for super in selected_itemsets:
+        count = 0
+        super = set(super)
+        for sub in frequent_itemsets[itemset_size]:
+            sub = set(sub)
+            if sub.issubset(super):
+                count +=1
+                
+            else:
+                pass
+        if(count < subset_count): #n-1인 부분집합 개수만큼 count가 있어야 Pruning되지 않는다.
+            #print(itemset_size)
+            #print(subset_count)
+            #?print("Pruning : ", super)
+            prun_list.append(tuple(super))
+            #print(type(super))
+            #// ! TODO : Pruning remove 인자로 튜플을 던질 수 있나..
+            #selected_itemsets.remove(super)
+    #print("pruning list")
+    #print(prun_list)
+    
+    try:
+        prun_set = set(prun_list[0])
+        #print(prun_set)
+        #print(selected_itemsets)
+        prun_tup = tuple()
+        for v in selected_itemsets:
+            
+            if prun_set == set(v):
+                
+                prun_tup += v
+                #selected_itemsets.remove(v)
+
+        #print(prun_tup)
+        selected_itemsets.remove(prun_tup)
+    except:
+        pass
+    print("finished pruning")
+    print(selected_itemsets)
+                
+
     """
     FILL UP HERE!
 	Add each itemset to the list if all of its subsets are frequent and discard it otherwise
@@ -76,8 +155,8 @@ def apply_apriori_pruning(selected_itemsets, frequent_itemsets, itemset_size):
 # param itemset_size: The size of intended frequent itemsets
 # return: candidate itemsets formed by selective joining and apriori pruning
 def generate_candidate_itemsets(frequent_itemsets, itemset_size):
-    joined_itemsets = generate_selectively_joined_itemsets(frequent_itemsets, itemset_size)
-    candidate_itemsets = apply_apriori_pruning(joined_itemsets, frequent_itemsets, itemset_size)
+    joined_itemsets = generate_selectively_joined_itemsets(frequent_itemsets, itemset_size) # * joined itemset
+    candidate_itemsets = apply_apriori_pruning(joined_itemsets, frequent_itemsets, itemset_size) # * get candidate itemsets after pruning
     return candidate_itemsets
 
 
@@ -98,45 +177,49 @@ def generate_all_frequent_itemsets(transactions, items, min_sup):
     frequent_itemsets[itemset_size] = list()
     #print(items)
 #? ******************************************************************
+    support_itemsets = dict()
+
+    for item in items: # * Size -1 item
+        count = support(transactions, item)
+        
+        
+        if count >= min_sup:
+            # print("ITEM : ", item)
+            # print("count : ", count)
+            support_itemsets[item] = count
+            frequent_itemsets[itemset_size].append(support_itemsets)
+        
+    print("-------------------")
+    #print(frequent_itemsets[1][0]['YFL014w'])
     
-    for item in items:
-        count = 0
-        for v in transactions:
-            #print(transactions[v])
-            if item in transactions[v]:
-                count+=1
-                
-                
-            
-        # print("Item : ", item)
-        # print("Count : ", count)
-        if(count == 1):
-            frequent_itemsets[itemset_size].append(item)
-            
-    
-    print(frequent_itemsets)
-    time.sleep(10)
 
     """
     FILL UP HERE!
     Find all frequent itemsets of size-1 and add them to the list
-    size:1
-    #! Now Working
+    size:1 ex) {YNL166c}
+    and have to get Support value of size-1 - done but didn't store that support value
+    and maybe eliminate those things less than min_sup - done
     """
 #? ******************************************************************
     # Frequent itemsets of greater size
-    itemset_size += 1
-
-    while frequent_itemsets[itemset_size - 1]:
-        frequent_itemsets[itemset_size] = list()
-        candidate_itemsets = generate_candidate_itemsets(frequent_itemsets, itemset_size)
+    itemset_size += 1 #now item size : 2
+    #print(itemset_size)
+    
+    while frequent_itemsets[itemset_size - 1]: # While L_k is not empty
+        frequent_itemsets[itemset_size] = list() # size-2
+        #print(frequent_itemsets)
+        candidate_itemsets = generate_candidate_itemsets(frequent_itemsets, itemset_size) # C_k
+        
         pruned_itemset = set()
         """
         FILL UP HERE!
 		Prune the candidate itemset if its support is less than minimum support
+        pruned_itemset을 이용해 해당 안되는거 제거
         """
         frequent_itemsets[itemset_size] = pruned_itemset
-        itemset_size += 1
+        itemset_size += 1 # k <- k+1
+        print("done")
+        print(itemset_size) #? 왜 한번만도는거같지
     return frequent_itemsets
 
 
