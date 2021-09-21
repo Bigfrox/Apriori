@@ -71,15 +71,54 @@ def generate_selectively_joined_itemsets(frequent_itemsets, itemset_size):
     joined_itemsets = set()
     #! Now Working
     
-    #print(frequent_itemsets[1][0])
-    c = combinations(frequent_itemsets[1][0], itemset_size) # [1][0]
-    comb_list = list(c)
+    print(frequent_itemsets)
+    
+    #*c = combinations(frequent_itemsets[1][0], itemset_size) # [1][0]
+    #comb_list = list(c)
     print("combination start")
     #print(len(frequent_itemsets[1][0]))
+    index = itemset_size - 1 # init value : index = 1
+    print("itemset size : ",itemset_size)
+    if itemset_size == 2:
+        c = combinations(frequent_itemsets[index][0], 2) # using size-1, make size-2
+        list_comb = list(c)
+        print(list_comb)
+        for v in list_comb:
+            joined_itemsets.add(v)
+    elif itemset_size > 2:
+        
+        
+        print("index : ", index)
+        
+        c3 = combinations(frequent_itemsets[index][0], 2)
+        l3 = list(c3)
+        print(l3)
+        t3 = tuple(l3)
+        for i in range(len(l3)):
+            test = t3[i][0] + t3[i][1]
+            tmp_set = tuple(set(test))
+            if(len(tmp_set) == itemset_size):
+                joined_itemsets.add(tmp_set)
+            else:
+                print(tmp_set,"은 삭제되었습니다.")
+    
+
+    tmp_joined_itemsets = list(joined_itemsets)
+
+    for v in tmp_joined_itemsets:
+        tmp_v = list(v)
+        print(tmp_v)
+        joined_itemsets.remove(tuple(tmp_v))
+        tmp_v.sort()
+        print(tmp_v)
+        joined_itemsets.add(tuple(tmp_v))
+    
+    print("Joined itemsets : ")
+    print(joined_itemsets)
     #print("combination list : ",comb_list)
     #print("comb list done")
-    for v in comb_list:
-        joined_itemsets.add(v)
+    # for v in comb_list:
+    #     joined_itemsets.add(v)
     #print(joined_itemsets)
     
     """
@@ -118,7 +157,10 @@ def apply_apriori_pruning(selected_itemsets, frequent_itemsets, itemset_size):
     #     if(count < subset_count):
     #         print("Pruning : ", super)
     #print("selected_itemsets :", selected_itemsets)
-    subset_count = len(list(selected_itemsets)[0]) # the number of element is the number of subset of size:(n-1)  or itemset_size+1? #! index out of range
+    selected_list = list(selected_itemsets)
+    if not selected_itemsets:
+        return None
+    subset_count = len(selected_list[0]) # the number of element is the number of subset of size:(n-1)  or itemset_size+1? #! index out of range
     print("subset count : ", subset_count)
     #print("len - selected itemsets")
     #print(len(selected_itemsets))
@@ -194,12 +236,12 @@ def generate_all_frequent_itemsets(transactions, items, min_sup):
     #print(items) # {'L', 'U', 'F', 'K', 'N', 'S', 'R', 'X', 'O', 'H', 'G', 'Q', 'B', 'T', 'I', 'A', 'E', 'J', 'Y', 'D', 'C', 'W', 'V', 'Z', 'M'}
     frequent_itemsets = dict()
     itemset_size = 0
-    frequent_itemsets[itemset_size] = list()
+    frequent_itemsets[itemset_size] = list() # index 0
     frequent_itemsets[itemset_size].append(frozenset())
     #frozenset -> not mutable
     # Frequent itemsets of size 1
     itemset_size += 1
-    frequent_itemsets[itemset_size] = list()
+    frequent_itemsets[itemset_size] = list() # index 1
     #print(items)
 #? ******************************************************************
     support_itemsets = dict()
@@ -234,10 +276,13 @@ def generate_all_frequent_itemsets(transactions, items, min_sup):
     #print(itemset_size)
     # * Generate All Frequent Itemsets(L2, L3 ...)
     while frequent_itemsets[itemset_size - 1]: # While L_k is not empty
+        print("start")
         frequent_itemsets[itemset_size] = list() # size-2
         #print(frequent_itemsets)
         
         candidate_itemsets = generate_candidate_itemsets(frequent_itemsets, itemset_size) # C_k
+        if not candidate_itemsets:
+            break
         print("Generated Candidate Itemsets . . . ")
         #print(candidate_itemsets)
         
@@ -247,7 +292,7 @@ def generate_all_frequent_itemsets(transactions, items, min_sup):
         i=1
         for item in candidate_itemsets: # * Size - n item #! Getting support of candidate_itemsets
             #print(item)
-            print("Progress : {:.5f}%".format(i*100/len(candidate_itemsets)))
+            #print("Progress : {:.5f}%".format(i*100/len(candidate_itemsets)))
             i += 1
             count = support(transactions, item)
             support_itemsets[item] = count
@@ -257,18 +302,19 @@ def generate_all_frequent_itemsets(transactions, items, min_sup):
                 # print("count : ", count)
                 #support_itemsets[item] = count
                 #print("sup itemsets: ",support_itemsets)
-        print("D O N E")               
+                
         #print("size ",itemset_size)
         frequent_itemsets[itemset_size].append(support_itemsets)    
-        #print(frequent_itemsets)
+        print("support 이후 ")
+        print(frequent_itemsets)
         
         #pruned_itemset = set() # ! 기존에 있던 코드
         pruned_itemset = dict() # ? dict여도 while을 끝낼 수 있음.
         for v in support_itemsets:
             #print(support_itemsets[v])
-            if support_itemsets[v] >= min_sup:
+            if support_itemsets[v] < min_sup:
                 #pruned_itemset.add(v)
-                pruned_itemset[v] = support_itemsets[v]
+                pruned_itemset[v] = support_itemsets[v] # Change: Pruned set을 삭제할 것들의 set으로 만듦
 
         """
         FILL UP HERE!
@@ -277,11 +323,23 @@ def generate_all_frequent_itemsets(transactions, items, min_sup):
         """
         #frequent_itemsets[itemset_size] = list()
         #print(frequent_itemsets)
-        frequent_itemsets[itemset_size] = pruned_itemset
+        #print(pruned_itemset)
+
+        for v in pruned_itemset:
+            del frequent_itemsets[itemset_size][0][v]
+            print(v,"삭제되었습니다. ")
+        #frequent_itemsets[itemset_size] = pruned_itemset
         itemset_size += 1 # k <- k+1
-        #print(frequent_itemsets)
-        print("done")
         
+        #print("done")
+    #print("[frequent_itemsets]")
+    #print(frequent_itemsets)
+    # for v in frequent_itemsets:
+    #     print("\n")
+    #     for u in frequent_itemsets[v]:
+    #         print(u)
+    #         for k in u:
+    #             print(k)
     return frequent_itemsets
 
 
@@ -292,18 +350,25 @@ def generate_all_frequent_itemsets(transactions, items, min_sup):
 # return: void
 def output_to_file(filename, frequent_itemsets_table, transactions):
     file = open(filename, 'w')
+    print("======================================================================")
+    
     for itemset_size in frequent_itemsets_table:
     
         # Do not print frequent itemsets of size 0 or 1
-        if itemset_size == 0:
+        if itemset_size == 0: #frozenset
             continue
-        if itemset_size == 1:
+        if itemset_size == 1: #size-1
             continue
         
         # Print frequent itemsets of size 2 or larger 
         for freq_itemset in frequent_itemsets_table[itemset_size]:
-            support_percent = (support(transactions, freq_itemset) / len(transactions)) * 100
-            file.write('{0} {1:.2f}% support\n'.format(freq_itemset, support_percent))
+            #print(freq_itemset)
+            for item in freq_itemset:
+                #support_percent = (support(transactions, freq_itemset) / len(transactions)) * 100
+                support_percent = (support(transactions, item) / len(transactions)) * 100
+                print("percent:",support_percent)
+                #file.write('{0} {1:.2f}% support\n'.format(freq_itemset, support_percent))
+                file.write('{0} {1:.2f}% support\n'.format(item, support_percent))
     file.close()
 
 
@@ -314,10 +379,10 @@ def main():
     output_filename = 'assignment1_output.txt'
     cellular_functions, genes_set = get_input_data(input_filename)
     #print(len(cellular_functions)) #216
-    print(len(genes_set))
+    print("gene sets length: ",len(genes_set))
     
     min_sup = ceil(MIN_SUPPORT * len(cellular_functions)) # min_sup 8
-    #min_sup = 9 #! 9로 하면 금방 나옴
+    #min_sup = 8
     #print(min_sup)
     
     frequent_itemsets_table = generate_all_frequent_itemsets(cellular_functions, genes_set, min_sup)
