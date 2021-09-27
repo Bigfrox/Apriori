@@ -4,7 +4,7 @@
 
 from math import ceil, comb
 from itertools import combinations
-import time
+
 MIN_SUPPORT = 0.035
 
 # This function reads a file under filename and extracts all transactions and a set of distinct items
@@ -20,9 +20,7 @@ def get_input_data(filename): #return cellular_functions, genes_set
         trans_items = splitted[1:]
         transactions[trans_id] = trans_items
         itemset.update(trans_items)
-        #print(len(transactions))
-        #print(itemset)
-        #time.sleep(10)
+        
         
     return transactions, itemset
 
@@ -33,9 +31,6 @@ def get_input_data(filename): #return cellular_functions, genes_set
 # return: The support count of the itemset
 def support(transactions, itemset):
     support_count = 0
-    
-    #print(itemset)
-    
     # itemset means like {1,2,3,4} 
         
     for v in transactions:
@@ -43,19 +38,13 @@ def support(transactions, itemset):
             support_count += 1
         
         if type(itemset) is tuple:
-            
             flag = True
             for i in range(len(itemset)):
-                #print(itemset[i])
                 if itemset[i] not in transactions[v]:
                     flag = False
             if flag is True:
                 support_count += 1
 
-    """
-	FILL UP HERE!
-    Calculate support of an itemset by iterating over the frequent itemsets
-    """
     return support_count
 
 
@@ -63,20 +52,11 @@ def support(transactions, itemset):
 # param frequent_itemsets: The table of frequent itemsets discovered
 # param itemset_size: The size of joined itemsets
 # return: All valid joined itemsets
-def generate_selectively_joined_itemsets(frequent_itemsets, itemset_size):
-    # initial size - 2
-    # print("joined - itemset size : ", itemset_size)  
-    # Record seen_itemsets to prevent duplicates
-    seen_itemsets = set() #?? * 봤던거 넣는거인듯 for duplicates #??????????????????????????????????????
+def generate_selectively_joined_itemsets(frequent_itemsets, itemset_size):    
+    #seen_itemsets = set() # Didn't use this set
     joined_itemsets = set()
-    #! Now Working
-    
-    print(frequent_itemsets)
-    
-    #*c = combinations(frequent_itemsets[1][0], itemset_size) # [1][0]
-    #comb_list = list(c)
-    print("combination start")
-    #print(len(frequent_itemsets[1][0]))
+
+    print(frequent_itemsets)    
     index = itemset_size - 1 # init value : index = 1
     print("itemset size : ",itemset_size)
     if itemset_size == 2:
@@ -88,11 +68,10 @@ def generate_selectively_joined_itemsets(frequent_itemsets, itemset_size):
     elif itemset_size > 2:
         
         
-        print("index : ", index)
-        
+        #print("index : ", index)
         c3 = combinations(frequent_itemsets[index][0], 2)
         l3 = list(c3)
-        print(l3)
+        #print(l3)
         t3 = tuple(l3)
         for i in range(len(l3)):
             test = t3[i][0] + t3[i][1]
@@ -100,12 +79,13 @@ def generate_selectively_joined_itemsets(frequent_itemsets, itemset_size):
             if(len(tmp_set) == itemset_size):
                 joined_itemsets.add(tmp_set)
             else:
-                print(tmp_set,"은 삭제되었습니다.")
+                print(tmp_set," is deleted.")
+                pass
     
 
     tmp_joined_itemsets = list(joined_itemsets)
 
-    for v in tmp_joined_itemsets:
+    for v in tmp_joined_itemsets: # * To remove the items duplicated, Use sort()
         tmp_v = list(v)
         print(tmp_v)
         joined_itemsets.remove(tuple(tmp_v))
@@ -113,19 +93,9 @@ def generate_selectively_joined_itemsets(frequent_itemsets, itemset_size):
         print(tmp_v)
         joined_itemsets.add(tuple(tmp_v))
     
-    print("Joined itemsets : ")
+    print("[Joined itemsets]")
     print(joined_itemsets)
-    #print("combination list : ",comb_list)
-    #print("comb list done")
-    # for v in comb_list:
-    #     joined_itemsets.add(v)
-    #print(joined_itemsets)
-    
-    """
-	FILL UP HERE!
-    Try all combinations of two itemsets from the table of frequent itemsets and join the pair if they share (itemset_size - 2) items
-    Add each joined itemset to the list if it is not present in the list and discard it otherwise
-    """
+
     return joined_itemsets # {('YEL027w', 'YNL271c'), ('YEL027w', 'YGL019w'), ('YGL019w', 'YNL271c')}
 
 
@@ -135,36 +105,15 @@ def generate_selectively_joined_itemsets(frequent_itemsets, itemset_size):
 # param itemset_size: The size of intended frequent itemsets
 # return: The itemsets whose all subsets are frequent
 def apply_apriori_pruning(selected_itemsets, frequent_itemsets, itemset_size):
-    #! Now Working
-    apriori_pruned_itemsets = set()
-    #???
-    #이전꺼를 확인해서,
-    #selected(joined)에서 불가능한 조합이 있으면 pruning 해야함
-    #pruning된 최종적인 itemsets를 반환
     
-    # subset_count = len(list(selected_itemsets)[0]) # the number of element is the number of subset of size:(n-1) 
-
-    # for super in selected_itemsets:
-    #     count = 0
-    #     super = set(super)
-    #     for sub in join2:
-    #         sub = set(sub)
-    #         if sub.issubset(super):
-    #             count +=1
-                
-    #         else:
-    #             pass
-    #     if(count < subset_count):
-    #         print("Pruning : ", super)
-    #print("selected_itemsets :", selected_itemsets)
+    apriori_pruned_itemsets = set()
+    
     selected_list = list(selected_itemsets)
     if not selected_itemsets:
         return None
-    subset_count = len(selected_list[0]) # the number of element is the number of subset of size:(n-1)  or itemset_size+1? #! index out of range
-    print("subset count : ", subset_count)
-    #print("len - selected itemsets")
-    #print(len(selected_itemsets))
-    prun_list = list() #!
+    subset_count = len(selected_list[0]) # the number of element is the number of subset of size:(n-1)
+    
+    prun_list = list()
     for super in selected_itemsets:
         count = 0
         super = set(super)
@@ -176,41 +125,21 @@ def apply_apriori_pruning(selected_itemsets, frequent_itemsets, itemset_size):
             else:
                 pass
         if(count < subset_count): #n-1인 부분집합 개수만큼 count가 있어야 Pruning되지 않는다.
-            #print(itemset_size)
-            #print(subset_count)
-            #?print("Pruning : ", super)
+            #print("Pruning : ", super)
             prun_list.append(tuple(super))
-            #print(type(super))
-            #// ! TODO : Pruning remove 인자로 튜플을 던질 수 있나..
-            #selected_itemsets.remove(super)
-    #print("pruning list")
-    #print(prun_list)
-    
+            
     try:
         prun_set = set(prun_list[0])
-        #print(prun_set)
-        #print(selected_itemsets)
         prun_tup = tuple()
         for v in selected_itemsets:
-            
             if prun_set == set(v):
-                
                 prun_tup += v
-                #selected_itemsets.remove(v)
-
-        #print(prun_tup)
+                
         selected_itemsets.remove(prun_tup)
     except:
         pass
-    #print("finished pruning")
-    #print(type(selected_itemsets))
-    #print(selected_itemsets)
+    
     apriori_pruned_itemsets = selected_itemsets
-
-    """
-    FILL UP HERE!
-	Add each itemset to the list if all of its subsets are frequent and discard it otherwise
-    """
     return apriori_pruned_itemsets
 
 
@@ -219,11 +148,9 @@ def apply_apriori_pruning(selected_itemsets, frequent_itemsets, itemset_size):
 # param itemset_size: The size of intended frequent itemsets
 # return: candidate itemsets formed by selective joining and apriori pruning
 def generate_candidate_itemsets(frequent_itemsets, itemset_size):
-    #print("===============",frequent_itemsets)
     joined_itemsets = generate_selectively_joined_itemsets(frequent_itemsets, itemset_size) # * joined itemset
-    #print("===============",joined_itemsets)
     candidate_itemsets = apply_apriori_pruning(joined_itemsets, frequent_itemsets, itemset_size) # * get candidate itemsets after pruning
-    #print("cand_len : ", len(candidate_itemsets))
+
     return candidate_itemsets
 
 
@@ -233,21 +160,20 @@ def generate_candidate_itemsets(frequent_itemsets, itemset_size):
 # param min_sup: The minimum support to find frequent itemsets
 # return: The table of all frequent itemsets of different sizes
 def generate_all_frequent_itemsets(transactions, items, min_sup):
-    #print(items) # {'L', 'U', 'F', 'K', 'N', 'S', 'R', 'X', 'O', 'H', 'G', 'Q', 'B', 'T', 'I', 'A', 'E', 'J', 'Y', 'D', 'C', 'W', 'V', 'Z', 'M'}
+    
     frequent_itemsets = dict()
     itemset_size = 0
     frequent_itemsets[itemset_size] = list() # index 0
     frequent_itemsets[itemset_size].append(frozenset())
-    #frozenset -> not mutable
-    # Frequent itemsets of size 1
+    
     itemset_size += 1
     frequent_itemsets[itemset_size] = list() # index 1
-    #print(items)
+    
 #? ******************************************************************
     support_itemsets = dict()
-    #print(items)
+    
     for item in items: # * Size -1 item
-        #print(item)
+        
         count = support(transactions, item)
         
         
@@ -256,21 +182,9 @@ def generate_all_frequent_itemsets(transactions, items, min_sup):
             # print("count : ", count)
             support_itemsets[item] = count
             
-    #print(support_itemsets)        
+            
     frequent_itemsets[itemset_size].append(support_itemsets)    
-    #print("-------------------@@")
-    # * till now, L1.
-    #print(frequent_itemsets[1][0]['YFL014w'])
-    #print(frequent_itemsets)
 
-    """
-    FILL UP HERE!
-    Find all frequent itemsets of size-1 and add them to the list
-    size:1 ex) {YNL166c}
-    and have to get Support value of size-1 - done but didn't store that support value
-    and maybe eliminate those things less than min_sup - done
-    """
-#? ******************************************************************
     # Frequent itemsets of greater size
     itemset_size += 1 #now item size : 2
     #print(itemset_size)
@@ -287,26 +201,19 @@ def generate_all_frequent_itemsets(transactions, items, min_sup):
         #print(candidate_itemsets)
         
         support_itemsets = dict()
-        # ! candidate가 갖는 조합 경우의 수가 너무 큼.. 85C2, 85C3 ...
+        
         #print("cand_len : ", len(candidate_itemsets))
         i=1
         for item in candidate_itemsets: # * Size - n item #! Getting support of candidate_itemsets
-            #print(item)
+            
             #print("Progress : {:.5f}%".format(i*100/len(candidate_itemsets)))
             i += 1
             count = support(transactions, item)
             support_itemsets[item] = count
-            #print("sup type ", type(support_itemsets))
-            #if count >= min_sup: #? 이게 사실 pruned 과정
-                # print("ITEM : ", item)
-                # print("count : ", count)
-                #support_itemsets[item] = count
-                #print("sup itemsets: ",support_itemsets)
-                
-        #print("size ",itemset_size)
+            
         frequent_itemsets[itemset_size].append(support_itemsets)    
-        print("support 이후 ")
-        print(frequent_itemsets)
+        
+        #print(frequent_itemsets)
         
         #pruned_itemset = set() # ! 기존에 있던 코드
         pruned_itemset = dict() # ? dict여도 while을 끝낼 수 있음.
@@ -316,30 +223,17 @@ def generate_all_frequent_itemsets(transactions, items, min_sup):
                 #pruned_itemset.add(v)
                 pruned_itemset[v] = support_itemsets[v] # Change: Pruned set을 삭제할 것들의 set으로 만듦
 
-        """
-        FILL UP HERE!
-		Prune the candidate itemset if its support is less than minimum support
-        pruned_itemset을 이용해 해당 안되는거 제거
-        """
         #frequent_itemsets[itemset_size] = list()
         #print(frequent_itemsets)
         #print(pruned_itemset)
 
         for v in pruned_itemset:
             del frequent_itemsets[itemset_size][0][v]
-            print(v,"삭제되었습니다. ")
+            print(v,"is pruned.")
         #frequent_itemsets[itemset_size] = pruned_itemset
         itemset_size += 1 # k <- k+1
         
-        #print("done")
-    #print("[frequent_itemsets]")
-    #print(frequent_itemsets)
-    # for v in frequent_itemsets:
-    #     print("\n")
-    #     for u in frequent_itemsets[v]:
-    #         print(u)
-    #         for k in u:
-    #             print(k)
+        
     return frequent_itemsets
 
 
@@ -366,10 +260,11 @@ def output_to_file(filename, frequent_itemsets_table, transactions):
             for item in freq_itemset:
                 #support_percent = (support(transactions, freq_itemset) / len(transactions)) * 100
                 support_percent = (support(transactions, item) / len(transactions)) * 100
-                print("percent:",support_percent)
+                print(item,'{:.2f}%'.format(support_percent))
                 #file.write('{0} {1:.2f}% support\n'.format(freq_itemset, support_percent))
                 file.write('{0} {1:.2f}% support\n'.format(item, support_percent))
     file.close()
+    print("Finished to print to output file : ", filename)
 
 
 # The main function
@@ -378,12 +273,9 @@ def main():
     #input_filename = 'test_input.txt'
     output_filename = 'assignment1_output.txt'
     cellular_functions, genes_set = get_input_data(input_filename)
-    #print(len(cellular_functions)) #216
-    print("gene sets length: ",len(genes_set))
+    #print("gene sets length: ",len(genes_set))
     
     min_sup = ceil(MIN_SUPPORT * len(cellular_functions)) # min_sup 8
-    #min_sup = 8
-    #print(min_sup)
     
     frequent_itemsets_table = generate_all_frequent_itemsets(cellular_functions, genes_set, min_sup)
     output_to_file(output_filename, frequent_itemsets_table, cellular_functions)
