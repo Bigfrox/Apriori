@@ -79,7 +79,7 @@ def generate_selectively_joined_itemsets(frequent_itemsets, itemset_size):
             if(len(tmp_set) == itemset_size):
                 joined_itemsets.add(tmp_set)
             else:
-                print(tmp_set," is deleted.")
+                #!print(tmp_set," is deleted.")
                 pass
     
 
@@ -112,21 +112,33 @@ def apply_apriori_pruning(selected_itemsets, frequent_itemsets, itemset_size):
     if not selected_itemsets:
         return None
     subset_count = len(selected_list[0]) # the number of element is the number of subset of size:(n-1)
-    
+    print("subset count : ",subset_count)
     prun_list = list()
     for super in selected_itemsets:
         count = 0
         super = set(super)
-        for sub in frequent_itemsets[itemset_size]:
-            sub = set(sub)
-            if sub.issubset(super):
-                count +=1
+        
+        
+        for sub in frequent_itemsets[itemset_size-1]:
+            
+            
+            #print("\n sub: ",sub,"super: ",super)
+            for sub_element in sub:
                 
-            else:
-                pass
+                sub_element = set(sub_element)
+                if sub_element.issubset(super):
+                    print(sub_element," is subset of ", super)
+                    count += 1
+                else:
+                    pass
+            
+            print("\n")
+            
         if(count < subset_count): #n-1인 부분집합 개수만큼 count가 있어야 Pruning되지 않는다.
+            #print("count : ",count , " subset_count : ", subset_count)
             #print("Pruning : ", super)
             prun_list.append(tuple(super))
+        print("count : ",count , " subset_count : ", subset_count)
             
     try:
         prun_set = set(prun_list[0])
@@ -229,7 +241,7 @@ def generate_all_frequent_itemsets(transactions, items, min_sup):
 
         for v in pruned_itemset:
             del frequent_itemsets[itemset_size][0][v]
-            print(v,"is pruned.")
+            #!print(v,"is pruned.")
         #frequent_itemsets[itemset_size] = pruned_itemset
         itemset_size += 1 # k <- k+1
         
@@ -278,6 +290,7 @@ def main():
     min_sup = ceil(MIN_SUPPORT * len(cellular_functions)) # min_sup 8
     
     frequent_itemsets_table = generate_all_frequent_itemsets(cellular_functions, genes_set, min_sup)
+    print(frequent_itemsets_table)
     output_to_file(output_filename, frequent_itemsets_table, cellular_functions)
 
 
